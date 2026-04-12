@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gesture Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<!-- HELP ICON -->
+<div class="help-icon" onclick="openHelp()">❓</div>
+
+<div class="main">
+
+    <!-- LEFT SIDE -->
+    <div class="left">
+        <h1>🏥 Gesture Control Dashboard</h1>
+
+        <div class="cards">
+            <div class="card">
+                <h3>💡 Light</h3>
+                <p id="light">OFF</p>
+            </div>
+
+            <div class="card">
+                <h3>🌀 Fan</h3>
+                <p id="fan">OFF</p>
+            </div>
+
+            <div class="card">
+                <h3>❄️ AC</h3>
+                <p id="ac">OFF</p>
+            </div>
+
+            <div class="card">
+                <h3>🔆 Brightness</h3>
+                <p id="brightness">50</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT SIDE CAMERA -->
+    <div class="right">
+        <img src="{{ url_for('video') }}" class="camera">
+    </div>
+
+</div>
+
+<!-- HELP MODAL -->
+<div id="helpModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeHelp()">&times;</span>
+
+        <h2>🖐 Gesture Controls Guide</h2>
+
+        <table>
+            <tr><th>Gesture</th><th>Action</th></tr>
+            <tr><td>✋ Open Palm</td><td>Light ON</td></tr>
+            <tr><td>✊ Closed Fist</td><td>Light OFF</td></tr>
+            <tr><td>👍 Thumbs Up</td><td>Fan ON</td></tr>
+            <tr><td>👎 Thumbs Down</td><td>Fan OFF</td></tr>
+            <tr><td>✌️ Two Fingers</td><td>Brightness UP</td></tr>
+            <tr><td>☝️ One Finger</td><td>Brightness DOWN</td></tr>
+            <tr><td>🤙 Three Fingers</td><td>AC ON</td></tr>
+            <tr><td>➡️ Swipe Right</td><td>Next Mode</td></tr>
+            <tr><td>⬅️ Swipe Left</td><td>Previous Mode</td></tr>
+        </table>
+
+    </div>
+</div>
+
+<!-- SCRIPT -->
+<script>
+function updateStatus() {
+    fetch('/status')
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("light").innerText = data.light;
+        document.getElementById("fan").innerText = data.fan;
+        document.getElementById("ac").innerText = data.ac;
+        document.getElementById("brightness").innerText = data.brightness;
+    });
+}
+
+setInterval(updateStatus, 1000);
+updateStatus();
+
+function openHelp() {
+    document.getElementById("helpModal").style.display = "block";
+}
+
+function closeHelp() {
+    document.getElementById("helpModal").style.display = "none";
+}
+</script>
+
+</body>
+</html>
