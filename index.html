@@ -1,10 +1,121 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sterile Gesture Control</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: white;
+            text-align: center;
+        }
+
+        .container {
+            padding: 60px 20px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: auto;
+            opacity: 0.9;
+        }
+
+        .btn {
+            margin-top: 30px;
+            padding: 12px 25px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 25px;
+            background: #00c6ff;
+            color: black;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn:hover {
+            background: #0072ff;
+            color: white;
+        }
+
+        .card-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 50px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            margin: 15px;
+            padding: 20px;
+            width: 250px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+        }
+
+        footer {
+            margin-top: 50px;
+            padding: 20px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+    </style>
 </head>
+
 <body>
-    <h1>Sterile Gesture Control System</h1>
-    <p>This is a Flask-based gesture control project using OpenCV.</p>
+
+<div class="container">
+    <h1>🖐️ Sterile Gesture Control</h1>
+    <p>
+        A contactless system using Computer Vision and Flask to control environments
+        through hand gestures. Designed for sterile and smart environments.
+    </p>
+
+    <button class="btn" onclick="showAlert()">View Project Info</button>
+
+    <div class="card-container">
+        <div class="card">
+            <h3>📷 OpenCV</h3>
+            <p>Real-time image processing and gesture detection.</p>
+        </div>
+
+        <div class="card">
+            <h3>🤖 MediaPipe</h3>
+            <p>Hand tracking and landmark detection.</p>
+        </div>
+
+        <div class="card">
+            <h3>🌐 Flask</h3>
+            <p>Backend server integration for processing logic.</p>
+        </div>
+    </div>
+
+    <footer>
+        Developed by Sahana | Sterile Gesture Project
+    </footer>
+</div>
+
+<script>
+function showAlert() {
+    alert("This project uses AI-based gesture recognition for touchless control.");
+}
+</script>
+
 </body>
 </html>
+
