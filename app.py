@@ -5,7 +5,7 @@ import time
 
 app = Flask(__name__)
 
-# MediaPipe
+# MediaPipe setup
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(min_detection_confidence=0.7,
                        min_tracking_confidence=0.7)
@@ -20,23 +20,51 @@ device_state = {
     "fan": "OFF ❌",
     "ac": "OFF ❌",
     "brightness": 50,
-    "gesture": ""
+    "gesture": "No Gesture"
 }
 
 prev_x = 0
 last_action_time = 0
 
-def count_fingers(hand_landmarks):
-    tips = [8, 12, 16, 20]
-    fingers = 0
-    for tip in tips:
-        if hand_landmarks.landmark[tip].y < hand_landmarks.landmark[tip - 2].y:
-            fingers += 1
+
+# ---------------- FINGER DETECTION ----------------
+def get_finger_states(hand_landmarks):
+    fingers = []
+
+    # Thumb
+    if hand_landmarks.landmark[4].x < hand_landmarks.landmark[3].x:
+        fingers.append(1)
+    else:
+        fingers.append(0)
+
+    # Index
+    if hand_landmarks.landmark[8].y < hand_landmarks.landmark[6].y:
+        fingers.append(1)
+    else:
+        fingers.append(0)
+
+    # Middle
+    if hand_landmarks.landmark[12].y < hand_landmarks.landmark[10].y:
+        fingers.append(1)
+    else:
+        fingers.append(0)
+
+    # Ring
+    if hand_landmarks.landmark[16].y < hand_landmarks.landmark[14].y:
+        fingers.append(1)
+    else:
+        fingers.append(0)
+
+    # Pinky
+    if hand_landmarks.landmark[20].y < hand_landmarks.landmark[18].y:
+        fingers.append(1)
+    else:
+        fingers.append(0)
+
     return fingers
 
-def detect_thumb(hand_landmarks):
-    return hand_landmarks.landmark[4].y < hand_landmarks.landmark[2].y
 
+# ---------------- SWIPE DETECTION ----------------
 def detect_swipe(hand_landmarks):
     global prev_x
     current_x = hand_landmarks.landmark[0].x
@@ -51,6 +79,8 @@ def detect_swipe(hand_landmarks):
     prev_x = current_x
     return direction
 
+
+# ---------------- FRAME GENERATOR ----------------
 def generate_frames():
     global last_action_time
 
@@ -70,48 +100,53 @@ def generate_frames():
 
                 mp_draw.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
-                fingers = count_fingers(hand_landmarks)
+                finger_state = get_finger_states(hand_landmarks)
                 swipe = detect_swipe(hand_landmarks)
+
+                gesture = tuple(finger_state)
 
                 if current_time - last_action_time > 1:
 
-                    if fingers >= 4:
-                        device_state["light"] = "ON"
-                        device_state["gesture"] = "Light ON"
+                    # ---------------- GESTURE CONTROL ----------------
 
-                    elif fingers == 0:
-                        device_state["light"] = "OFF"
-                        device_state["gesture"] = "Light OFF"
-
-                    elif fingers == 2:
-                        device_state["brightness"] = min(100, device_state["brightness"] + 10)
-                        device_state["gesture"] = "Brightness UP"
-
-                    elif fingers == 1:
+                    # Brightness DOWN (INDEX ONLY)
+                    if gesture == (0, 1, 0, 0, 0):
                         device_state["brightness"] = max(0, device_state["brightness"] - 10)
                         device_state["gesture"] = "Brightness DOWN"
 
-                    elif fingers == 3:
-                        device_state["ac"] = "ON"
-                        device_state["gesture"] = "AC ON"
+                    # Brightness UP (INDEX + MIDDLE)
+                    elif gesture == (0, 1, 1, 0, 0):
+                        device_state["brightness"] = min(100, device_state["brightness"] + 10)
+                        device_state["gesture"] = "Brightness UP"
 
-                    # Fan control
-                    if detect_thumb(hand_landmarks):
-                        device_state["fan"] = "ON"
+                    # ❄️ AC ON (THREE FINGERS: INDEX + MIDDLE + RING)
+                    elif gesture == (0, 1, 1, 1, 0):
+                        device_state["ac"] = "ON ❄️"
+                        device_state["gesture"] = "AC ON ❄️"
+
+                    # Light ON (ALL FINGERS)
+                    elif gesture == (1, 1, 1, 1, 1):
+                        device_state["light"] = "ON 💡"
+                        device_state["gesture"] = "Light ON"
+
+                    # Light OFF (FIST)
+                    elif gesture == (0, 0, 0, 0, 0):
+                        device_state["light"] = "OFF ❌"
+                        device_state["gesture"] = "Light OFF"
+
                     else:
-                        device_state["fan"] = "OFF"
-
-                    # Swipe
-                    if swipe == "RIGHT":
-                        device_state["gesture"] = "Next Mode ➡️"
-                    elif swipe == "LEFT":
-                        device_state["gesture"] = "Previous Mode ⬅️"
+                        device_state["gesture"] = "❌ Invalid Gesture"
 
                     last_action_time = current_time
 
+        else:
+            device_state["gesture"] = "No Hand Detected"
+
+        # Show gesture on screen
         cv2.putText(frame, device_state["gesture"], (20, 40),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
+        # Encode frame
         ret, buffer = cv2.imencode('.jpg', frame)
         frame = buffer.tobytes()
 
@@ -119,19 +154,22 @@ def generate_frames():
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 
-# ROUTES
+# ---------------- ROUTES ----------------
 @app.route('/')
 def landing():
     return render_template('landing.html')
+
 
 @app.route('/dashboard')
 def dashboard():
     return render_template('index.html')
 
+
 @app.route('/video')
 def video():
     return Response(generate_frames(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
+
 
 @app.route('/status')
 def status():
